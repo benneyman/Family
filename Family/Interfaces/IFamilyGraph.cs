@@ -7,8 +7,7 @@ namespace Family.Interfaces
 {
     public interface IFamilyGraph
     {
-        void Add(EdgeInput inputEdge);
-        Edge GetEdge(EdgeInput inputEdge);
-        IPersonRelationships Get(Person person);
+        void AddRelationship(string source, string target, string relationshipType);
+        void AddChild(string motherName, string childName, string gender);
     }
 }

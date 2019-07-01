@@ -1,70 +1,68 @@
 ﻿using Family.DTO;
+using Family.Enums;
 using Family.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Family.Implementation
 {
     public class PersonStore : IPersonStore
     {
-        private Dictionary<string, Person> people;
+        private Dictionary<string, Person> peopleStore;
+        private int Id;
+        private static object Lock = new object();
 
         public PersonStore()
         {
-            people = new Dictionary<string, Person>();
+            peopleStore = new Dictionary<string, Person>();
+            Id = 1;
         }
 
-        public void Add(Person person)
+        public Person AddPerson(string personName, Gender gender)
         {
-            if(Contains(person.Name))
+            Person person;
+            if(ContainsPerson(personName))
             {
-                throw new ArgumentException($"{person.Name} is already present");
+                throw new ArgumentException($"{personName} is already present");
             }
-            people.Add(person.Name, person);
+            lock(Lock)
+            {
+                person = new Person(personName, gender, Id);
+                peopleStore.Add(personName, person);
+                Interlocked.Increment(ref Id);
+            }
+            return person;
         }
 
-        public void Add(IEnumerable<Person> people)
+        public bool ContainsPerson(string personName)
         {
+            return peopleStore.ContainsKey(personName);
+        }
+
+        public IEnumerable<Person> GetPeople(IEnumerable<string> people)
+        {
+            List<Person> result = new List<Person>();
             foreach (var person in people)
             {
                 try
                 {
-                    Add(person);
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
-            }
-        }
-
-        public bool Contains(string personName)
-        {
-            return people.ContainsKey(personName);
-        }
-
-        public IEnumerable<Person> GetPeople(List<string> people)
-        {
-            List<Person> result = new List<Person>();
-            people.ForEach(person => {
-                try
-                {
-                    Person personObject = GetPerson(person);
+                    Person personObject = GetPeople(person);
                     result.Add(personObject);
                 }
                 catch (Exception)
                 {
                     throw;
                 }
-            });
+            }
             return result;
         }
-
-        public Person GetPerson(string personName)
+        
+        public Person GetPeople(string personName)
         {
             Person person;
-            bool result = people.TryGetValue(personName, out person);
+            bool result = peopleStore.TryGetValue(personName, out person);
             if(!result)
             {
                 throw new ArgumentException($"{personName} isn't found");

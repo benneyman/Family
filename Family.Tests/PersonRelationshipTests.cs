@@ -11,7 +11,7 @@ namespace Family.Tests
 {
     public class PersonRelationshipTests
     {
-        Person bob = new Person("Bob", Gender.Male);
+        Person bob = new Person("Bob", Gender.Male, 1);
 
         [Test]
         public void AddingEdgeTest()

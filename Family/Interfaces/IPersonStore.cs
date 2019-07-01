@@ -1,4 +1,5 @@
 ﻿using Family.DTO;
+using Family.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,10 +8,9 @@ namespace Family.Interfaces
 {
     public interface IPersonStore
     {
-        void Add(Person person);
-        void Add(IEnumerable<Person> person);
-        bool Contains(string personName);
-        Person GetPerson(string personName);
-        IEnumerable<Person> GetPeople(List<string> people);
+        Person AddPerson(string personName, Gender gender);
+        bool ContainsPerson(string personName);
+        Person GetPeople(string personName);
+        IEnumerable<Person> GetPeople(IEnumerable<string> people);
     }
 }

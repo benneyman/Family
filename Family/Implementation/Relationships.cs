@@ -3,129 +3,85 @@ using Family.Enums;
 using Family.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Family.Implementation
 {
     public sealed class Relationships : IRelationships
     {
-        private IPersonStore PersonStore;
-        public Relationships()
+        private IBaseRelationships BaseRelationships;
+        public Relationships(IBaseRelationships baseRelationships)
         {
-            var personStore = ServiceLocator.GetService<IPersonStore>();
-            PersonStore = personStore ?? throw new Exception("Could not load dependencies");
+            BaseRelationships = baseRelationships;
         }
-        public Person GetPerson(string person)
-        {
-            Person personObject;
-            try
-            {
-                personObject = PersonStore.GetPerson(person);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return personObject;
-        }
-
         public IEnumerable<Person> BrotherInLaw(string person)
         {
-            return InLaws(person, Gender.Male);
+            return InLaws(person, Gender.Male).OrderBy(m => m.Id);
         }
 
         public IEnumerable<Person> Daughter(string person)
         {
-            return Children(person, Gender.Female);
+            return Children(person, Gender.Female).OrderBy(m => m.Id);
         }
 
         public IEnumerable<Person> MaternalAunt(string person)
         {
-            return UncleAndAunt(person, "Maternal", "Aunt");
+            return UncleAndAunt(person, "Maternal", "Aunt").OrderBy(m => m.Id); 
         }
 
         public IEnumerable<Person> MaternalUncle(string person)
         {
-            return UncleAndAunt(person, "Maternal", "Uncle");
+            return UncleAndAunt(person, "Maternal", "Uncle").OrderBy(m => m.Id);
         }
 
         public IEnumerable<Person> PaternalAunt(string person)
         {
-            return UncleAndAunt(person, "Paternal", "Aunt");
+            return UncleAndAunt(person, "Paternal", "Aunt").OrderBy(m => m.Id); 
         }
 
         public IEnumerable<Person> PaternalUncle(string person)
         {
-            return UncleAndAunt(person, "Paternal", "Uncle");
+            return UncleAndAunt(person, "Paternal", "Uncle").OrderBy(m => m.Id); 
         }
 
         public IEnumerable<Person> Siblings(string person)
         {
-            Person personObject;
-            try
-            {
-                personObject = GetPerson(person);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return personObject.Siblings();
+            return BaseRelationships.Siblings(person).OrderBy(m => m.Id);
         }
 
         public IEnumerable<Person> SisterInLaw(string person)
         {
-            return InLaws(person, Gender.Female);
+            return InLaws(person, Gender.Female).OrderBy(m => m.Id);
         }
 
         public IEnumerable<Person> Son(string person)
         {
-            return Children(person, Gender.Male);
+            return Children(person, Gender.Male).OrderBy(m => m.Id);
         }
 
         private IEnumerable<Person> UncleAndAunt(string person, string direction, string uncleOrAunt)
         {
-            Person personObject;
-            try
-            {
-                personObject = GetPerson(person);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
             Gender parentsGender = direction == "Maternal" ? Gender.Female : Gender.Male;
             Gender uncleOrAuntGender = uncleOrAunt == "Aunt" ? Gender.Female : Gender.Male;
-            return personObject.Parents(parentsGender)
-                .Siblings(uncleOrAuntGender);
+            var parents = BaseRelationships.Parents(person, parentsGender);
+            return BaseRelationships.Siblings(parents, uncleOrAuntGender).OrderBy(m => m.Id); 
         }
 
         private IEnumerable<Person> Children(string person, Gender gender)
         {
-            Person personObject;
-            try
-            {
-                personObject = GetPerson(person);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return personObject.Children(gender);
+            return BaseRelationships.Children(person, gender).OrderBy(m => m.Id);
         }
 
         private IEnumerable<Person> InLaws(string person, Gender gender)
         {
-            Person personObject;
-            try
-            {
-                personObject = GetPerson(person);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return personObject.Spouse().Siblings(gender);
+            var spouse = BaseRelationships.Spouse(person);
+            IEnumerable<Person> spouseInLaws = BaseRelationships.Siblings(spouse, gender);
+
+            var siblings = BaseRelationships.Siblings(person);
+            IEnumerable<Person> siblingsInLaws = BaseRelationships.Spouse(siblings);
+
+            return siblingsInLaws.Concat(spouseInLaws).OrderBy(m => m.Id);
         }
     }
 }

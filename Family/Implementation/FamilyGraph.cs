@@ -1,26 +1,35 @@
 ﻿using Family.DTO;
+using Family.Enums;
+using Family.Extention;
 using Family.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Family.Implementation
 {
-    public class FamilyGraph : IFamilyGraph
+    public sealed class FamilyGraph : IFamilyGraph, IBaseRelationships
     {
         private Dictionary<Person, PersonRelationships> Families;
-        public FamilyGraph()
+        public FamilyGraph(IPersonStore personStore)
         {
             Families = new Dictionary<Person, PersonRelationships>();
+            PersonStore = personStore;
         }
-        public IPersonStore PersonStore { get { return ServiceLocator.GetService<IPersonStore>(); } }
-
-        public void Add(EdgeInput inputEdge)
+        public IPersonStore PersonStore { get; private set; }
+        /// <summary>
+        /// Adds a relation from source person to target person of the specified type relationshipType
+        /// </summary>
+        /// <param name="source">Name of source person</param>
+        /// <param name="target">Name of target person</param>
+        /// <param name="relationshipType">Type of relationship => Parent or Spouse</param>
+        public void AddRelationship(string source, string target, string relationshipType)
         {
-            Edge edge;
+            Relationship edge;
             try
             {
-                edge = GetEdge(inputEdge);
+                edge = BuildRelationship(source, target, relationshipType);
             }
             catch (ArgumentException)
             {
@@ -28,26 +37,49 @@ namespace Family.Implementation
             }
             switch (edge.RelationshipType)
             {
-                case Enums.RelationshipType.Parent:
+                case RelationshipType.Parent:
                     AddParentRelationship(edge);
                     return;
-                case Enums.RelationshipType.Spouse:
+                case RelationshipType.Spouse:
                     AddSpouseRelationship(edge);
                     return;
             }
         }
-        private void AddSpouseRelationship(Edge edge)
+        /// <summary>
+        /// Adds a new child to the mother.
+        /// Expects mother to be a female and child's name to be unique
+        /// </summary>
+        /// <param name="motherName">Mothers Name</param>
+        /// <param name="childName">Childs Name</param>
+        /// <param name="gender">Gender of the child</param>
+        public void AddChild(string motherName, string childName, string gender)
         {
-            PersonRelationships sourcePersonRelationships, targetPersonRelationships;
+            var mother = PersonStore.GetPeople(motherName);
+            if(mother.Gender != Gender.Female)
+            {
+                throw new InvalidOperationException("Mother is not a female.");
+            }
+            var childGender = gender.ToGenderEnum();
+            var child = PersonStore.AddPerson(childName, childGender);
+            var motherRelationship = GetRelationship(mother);
+            AddRelationship(motherName, childName, "Parent");
+            if(motherRelationship.Spouse != null)
+            {
+                AddRelationship(motherRelationship.Spouse.Name, childName, "Parent");
+            }
+        }
+        private void AddSpouseRelationship(Relationship edge)
+        {
+            PersonRelationships sourcePersonRelationships, tarGetPeopleRelationships;
             Families.TryAdd(edge.Source, new PersonRelationships());
             Families.TryAdd(edge.Target, new PersonRelationships());
 
             Families.TryGetValue(edge.Source, out sourcePersonRelationships);
-            Families.TryGetValue(edge.Target, out targetPersonRelationships);
+            Families.TryGetValue(edge.Target, out tarGetPeopleRelationships);
 
-            if (targetPersonRelationships.Spouse == null && sourcePersonRelationships.Spouse == null)
+            if (tarGetPeopleRelationships.Spouse == null && sourcePersonRelationships.Spouse == null)
             {
-                targetPersonRelationships.AddSpouse(edge.Source);
+                tarGetPeopleRelationships.AddSpouse(edge.Source);
                 sourcePersonRelationships.AddSpouse(edge.Target);
             }
             else
@@ -55,17 +87,17 @@ namespace Family.Implementation
                 throw new InvalidOperationException($"Cannot add spouse");
             }
         }
-        private void AddParentRelationship(Edge edge)
+        private void AddParentRelationship(Relationship edge)
         {
-            PersonRelationships sourcePersonRelationships, targetPersonRelationships;
+            PersonRelationships sourcePersonRelationships, tarGetPeopleRelationships;
             Families.TryAdd(edge.Source, new PersonRelationships());
             Families.TryAdd(edge.Target, new PersonRelationships());
 
             Families.TryGetValue(edge.Source, out sourcePersonRelationships);
-            Families.TryGetValue(edge.Target, out targetPersonRelationships);
-            if (targetPersonRelationships.CanAddParent(edge.Source))
+            Families.TryGetValue(edge.Target, out tarGetPeopleRelationships);
+            if (tarGetPeopleRelationships.CanAddParent(edge.Source))
             {
-                targetPersonRelationships.AddParent(edge.Source);
+                tarGetPeopleRelationships.AddParent(edge.Source);
                 sourcePersonRelationships.AddEdge(edge);
             }
             else
@@ -73,26 +105,127 @@ namespace Family.Implementation
                 throw new InvalidOperationException($"Cannot add parents to {edge.Target.Name}");
             }
         }
-        public Edge GetEdge(EdgeInput inputEdge)
+        private PersonRelationships GetRelationship(Person person)
         {
-            Person source, target;
+            Families.TryGetValue(person, out var personRelationships);
+            return personRelationships;
+        }
+        private Relationship BuildRelationship(string source, string target, string relationshipType)
+        {
+            Person sourcePerson, targetPerson;
+            var relationship = relationshipType.ToRelationshipEnum();
             try
             {
-                source = PersonStore.GetPerson(inputEdge.Source);
-                target = PersonStore.GetPerson(inputEdge.Target);
+                sourcePerson = PersonStore.GetPeople(source);
+                targetPerson = PersonStore.GetPeople(target);
             }
             catch (Exception)
             {
-
                 throw;
             }
-            return new Edge(source, target, inputEdge.RelationshipType);
+            return new Relationship(sourcePerson, targetPerson, relationship);
         }
-        public IPersonRelationships Get(Person person)
+        
+        #region Base Relationships
+        public IEnumerable<Person> Parents(IEnumerable<Person> people, Gender? gender = null)
         {
-            PersonRelationships personRelationships;
-            Families.TryGetValue(person, out personRelationships);
-            return personRelationships;
+            return people.SelectMany(m => Parents(m, gender));
         }
+        public IEnumerable<Person> Parents(IEnumerable<string> people, Gender? gender = null)
+        {
+            var peopleObject = PersonStore.GetPeople(people);
+            return Parents(peopleObject, gender);
+        }
+        public IEnumerable<Person> Children(IEnumerable<Person> people, Gender? gender = null)
+        {
+            return people.SelectMany(m => Children(m, gender));
+        }
+        public IEnumerable<Person> Children(IEnumerable<string> people, Gender? gender = null)
+        {
+            var peopleObject = PersonStore.GetPeople(people);
+            return Children(peopleObject, gender);
+        }
+        public IEnumerable<Person> Siblings(IEnumerable<Person> people, Gender? gender = null)
+        {
+            return people.SelectMany(m => Siblings(m, gender));
+        }
+        public IEnumerable<Person> Siblings(IEnumerable<string> people, Gender? gender = null)
+        {
+            var peopleObject = PersonStore.GetPeople(people);
+            return Siblings(peopleObject, gender);
+        }
+        public IEnumerable<Person> Spouse(IEnumerable<Person> people)
+        {
+            return people.SelectMany(m => Spouse(m));
+        }
+        public IEnumerable<Person> Spouse(IEnumerable<string> people)
+        {
+            var peopleObject = PersonStore.GetPeople(people);
+            return Spouse(peopleObject);
+        }
+
+        public IEnumerable<Person> Parents(Person person, Gender? gender = null)
+        {
+            List<Person> result = new List<Person>();
+            PersonRelationships personRelationships = GetRelationship(person);
+            if (personRelationships == null)
+            {
+                return result;
+            }
+            IEnumerable<Person> parents = personRelationships.Parents
+                .Where(m => gender == null || m.Gender == gender);
+            result.AddRange(parents);
+            return result;
+        }
+        public IEnumerable<Person> Parents(string person, Gender? gender = null)
+        {
+            var personObject = PersonStore.GetPeople(person);
+            return Parents(personObject, gender);
+        }
+        public IEnumerable<Person> Children(Person person, Gender? gender = null)
+        {
+            List<Person> result = new List<Person>();
+            PersonRelationships personRelationships = GetRelationship(person);
+            List<Person> children = personRelationships.Edges
+                .Where(m => m.RelationshipType == RelationshipType.Parent)
+                .Where(m => gender == null || m.Target.Gender == gender)
+                .Select(m => m.Target)
+                .ToList();
+            result.AddRange(children);
+            return result;
+        }
+        public IEnumerable<Person> Children(string person, Gender? gender = null)
+        {
+            var personObject = PersonStore.GetPeople(person);
+            return Children(personObject, gender);
+        }
+        public IEnumerable<Person> Siblings(Person person, Gender? gender = null)
+        {
+            var parents = Parents(person);
+            var children = Children(parents, gender);
+            return children.Distinct()
+                    .Where(m => !m.Equals(person));
+        }
+        public IEnumerable<Person> Siblings(string person, Gender? gender = null)
+        {
+            var personObject = PersonStore.GetPeople(person);
+            return Siblings(personObject, gender);
+        }
+        public IEnumerable<Person> Spouse(Person person)
+        {
+            List<Person> result = new List<Person>();
+            PersonRelationships personRelationships = GetRelationship(person);
+            if (personRelationships.Spouse != null)
+            {
+                result.Add(personRelationships.Spouse);
+            }
+            return result;
+        }
+        public IEnumerable<Person> Spouse(string person)
+        {
+            var personObject = PersonStore.GetPeople(person);
+            return Spouse(personObject);
+        }
+        #endregion
     }
 }

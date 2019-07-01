@@ -14,45 +14,38 @@ namespace Family.Tests
     public class BaseRelationshipsTests
     {
         public IPersonStore PersonStore;
-        public IFamilyGraph familyGraph;
 
-        Person george = new Person("George", Gender.Male);
-        Person mary = new Person("Mary", Gender.Female);
-        Person bob = new Person("Bob", Gender.Male);
-        Person sally = new Person("Sally", Gender.Female);
-        Person dave = new Person("Dave", Gender.Male);
+        Person george, mary, bob, sally, dave;
 
         [OneTimeSetUp]
         public void SetUp()
         {
             PersonStore = new PersonStore();
-            PersonStore.Add(new List<Person>() { george, mary, bob, sally, dave });
-            ServiceLocator.RegisterType(PersonStore);
+            george = PersonStore.AddPerson("George", Gender.Male);
+            mary = PersonStore.AddPerson("Mary", Gender.Female);
+            bob = PersonStore.AddPerson("Bob", Gender.Male);
+            sally = PersonStore.AddPerson("Sally", Gender.Female);
+            dave = PersonStore.AddPerson("Dave", Gender.Male);
         }
 
         [Test]
         public void ParentsTest()
         {
-            //Add George and Mary as Bob's Parents
-            familyGraph = new FamilyGraph();
-            familyGraph.Add(new EdgeInput("George", "Bob", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Bob", RelationshipType.Parent));
-            ServiceLocator.RegisterType(familyGraph);
-            Person bob = PersonStore.GetPerson("Bob");
-            IEnumerable<Person> actual = bob.Parents();
+            //AddRelationship George and Mary as Bob's Parents
+            FamilyGraph familyGraph = new FamilyGraph(PersonStore);
+            familyGraph.AddRelationship("George", "Bob", "Parent");
+            familyGraph.AddRelationship("Mary", "Bob", "Parent");
+            IEnumerable<Person> actual = familyGraph.Parents(bob);
             IEnumerable<Person> expected = PersonStore.GetPeople(new List<string>() { "George", "Mary" });
             actual.Should().BeEquivalentTo(expected);
-            
+
         }
         [Test]
         public void EmptyParentsTest()
         {
-            //Add George and Mary as Bob's Parents
-            familyGraph = new FamilyGraph();
-            ServiceLocator.RegisterType(familyGraph);
-
-            Person bob = PersonStore.GetPerson("Bob");
-            IEnumerable<Person> actual = bob.Parents();
+            //AddRelationship George and Mary as Bob's Parents
+            FamilyGraph familyGraph = new FamilyGraph(PersonStore);
+            IEnumerable<Person> actual = familyGraph.Parents(bob);
             IEnumerable<Person> expected = new List<Person>();
             actual.Should().BeEquivalentTo(expected);
 
@@ -60,46 +53,43 @@ namespace Family.Tests
         [Test]
         public void SiblingsTest()
         {
-            //Add George and Mary as Bob's Parents
-            familyGraph = new FamilyGraph();
-            familyGraph.Add(new EdgeInput("George", "Bob", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Bob", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("George", "Dave", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Dave", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("George", "Sally", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Sally", RelationshipType.Parent));
-            ServiceLocator.RegisterType(familyGraph);
-            IEnumerable<Person> actual = dave.Siblings();
+            //AddRelationship George and Mary as Bob's Parents
+            FamilyGraph familyGraph = new FamilyGraph(PersonStore);
+            familyGraph.AddRelationship("George", "Bob", "Parent");
+            familyGraph.AddRelationship("Mary", "Bob", "Parent");
+            familyGraph.AddRelationship("George", "Dave", "Parent");
+            familyGraph.AddRelationship("Mary", "Dave", "Parent");
+            familyGraph.AddRelationship("George", "Sally", "Parent");
+            familyGraph.AddRelationship("Mary", "Sally", "Parent");
+            IEnumerable<Person> actual = familyGraph.Siblings(dave);
             IEnumerable<Person> expected = PersonStore.GetPeople(new List<string>() { "Bob", "Sally" });
             actual.Should().BeEquivalentTo(expected);
         }
         [Test]
         public void SiblingsHaveSameParentsTest()
         {
-            //Add George and Mary as Bob's Parents
-            familyGraph = new FamilyGraph();
-            familyGraph.Add(new EdgeInput("George", "Bob", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Bob", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("George", "Dave", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Dave", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("George", "Sally", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Sally", RelationshipType.Parent));
-            ServiceLocator.RegisterType(familyGraph);
-            dave.Parents().Should().BeEquivalentTo(bob.Parents());
+            //AddRelationship George and Mary as Bob's Parents
+            FamilyGraph familyGraph = new FamilyGraph(PersonStore);
+            familyGraph.AddRelationship("George", "Bob", "Parent");
+            familyGraph.AddRelationship("Mary", "Bob", "Parent");
+            familyGraph.AddRelationship("George", "Dave", "Parent");
+            familyGraph.AddRelationship("Mary", "Dave", "Parent");
+            familyGraph.AddRelationship("George", "Sally", "Parent");
+            familyGraph.AddRelationship("Mary", "Sally", "Parent");
+            familyGraph.Parents(dave).Should().BeEquivalentTo(familyGraph.Parents(bob));
         }
         [Test]
         public void ChildrenTest()
         {
-            //Add George and Mary as Bob's Parents
-            familyGraph = new FamilyGraph();
-            familyGraph.Add(new EdgeInput("George", "Bob", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Bob", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("George", "Dave", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Dave", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("George", "Sally", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Sally", RelationshipType.Parent));
-            ServiceLocator.RegisterType(familyGraph);
-            IEnumerable<Person> actual = george.Children();
+            //AddRelationship George and Mary as Bob's Parents
+            FamilyGraph familyGraph = new FamilyGraph(PersonStore);
+            familyGraph.AddRelationship("George", "Bob", "Parent");
+            familyGraph.AddRelationship("Mary", "Bob", "Parent");
+            familyGraph.AddRelationship("George", "Dave", "Parent");
+            familyGraph.AddRelationship("Mary", "Dave", "Parent");
+            familyGraph.AddRelationship("George", "Sally", "Parent");
+            familyGraph.AddRelationship("Mary", "Sally", "Parent");
+            IEnumerable<Person> actual = familyGraph.Children(george);
             IEnumerable<Person> expected = new List<Person>() { dave, bob, sally };
             actual.Should().BeEquivalentTo(expected);
         }

@@ -13,30 +13,37 @@ namespace Tests
         [Test]
         public void AddNewPerson()
         {
-            Person person = new Person("Name", Gender.Male);
             IPersonStore personStore = new PersonStore();
-            personStore.Add(person);
-            var actual = personStore.Contains("Name");
+            personStore.AddPerson("Name", Gender.Male);
+            var actual = personStore.ContainsPerson("Name");
             actual.Should().Be(true);
         }
         [Test]
         public void AddingExistingPersonShouldThrowException()
         {
-            Person person = new Person("Name", Gender.Male);
             IPersonStore personStore = new PersonStore();
-            personStore.Add(person);
-            Action act = () => personStore.Add(person);
+            personStore.AddPerson("Name", Gender.Male);
+            Action act = () => personStore.AddPerson("Name", Gender.Male);
             act.Should().Throw<ArgumentException>();
         }
         [Test]
         public void NonExistantPersonContainsShouldReturnFalse()
         {
-            Person person = new Person("Name", Gender.Male);
             IPersonStore personStore = new PersonStore();
-            var actual = personStore.Contains("Name");
+            var actual = personStore.ContainsPerson("Name");
             actual.Should().Be(false);
         }
-
-
+        [Test]
+        public void AddingMultiplePersonShouldGenerateValidIds()
+        {
+            IPersonStore personStore = new PersonStore();
+            var person1 = personStore.AddPerson("Name1", Gender.Male);
+            var person2 = personStore.AddPerson("Name2", Gender.Male);
+            var person3 = personStore.AddPerson("Name3", Gender.Male);
+            
+            person1.Id.Should().Be(1);
+            person2.Id.Should().Be(2);
+            person3.Id.Should().Be(3);
+        }
     }
 }

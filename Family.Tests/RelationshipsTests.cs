@@ -12,76 +12,76 @@ namespace Family.Tests
 {
     public class RelationshipsTests
     {
-       
-        Person george = new Person("George", Gender.Male);
-        Person mary = new Person("Mary", Gender.Female);
-        Person bob = new Person("Bob", Gender.Male);
-        Person sally = new Person("Sally", Gender.Female);
-        Person dave = new Person("Dave", Gender.Male);
-        Person davesMaternalUncle = new Person("Hulk", Gender.Male);
-        Person davesPaternalAunt = new Person("Aunt", Gender.Female);
-        Person davesMaternalGrandDad = new Person("Thor", Gender.Male);
-        Person davesMaternalGrandMom = new Person("Wonder", Gender.Female);
-        Person davesPaternalGrandDad = new Person("Thor1", Gender.Male);
-        Person davesPaternalGrandMom = new Person("Wonder1", Gender.Female);
 
-        Person amy = new Person("Amy", Gender.Female);
-        Person bamy = new Person("Bamy", Gender.Female);
-        Person miller = new Person("Miller", Gender.Male);
-        Person amysMom = new Person("Miley", Gender.Female);
-        Person amysDad = new Person("Brad", Gender.Male);
+        Person george,mary,bob,sally,dave,davesMaternalUncle,davesPaternalAunt,davesMaternalGrandDad,
+        davesMaternalGrandMom,davesPaternalGrandDad,davesPaternalGrandMom,amy,
+        bamy,miller,amysBrother,amysBrother1,amysMom,amysDad;
 
 
-        Relationships relationships;
+       Relationships relationships;
 
         [OneTimeSetUp]
         public void SetUp()
         {
             IPersonStore PersonStore = new PersonStore();
-            IFamilyGraph familyGraph  = new FamilyGraph();
 
-            PersonStore.Add(new List<Person>()
-            {
-                george, mary, bob, sally, dave, davesMaternalUncle, davesMaternalGrandDad, davesMaternalGrandMom,
-                davesPaternalAunt, davesPaternalGrandDad, davesPaternalGrandMom, amy, bamy, miller, amysMom, amysDad
-            });
+            george = PersonStore.AddPerson("George", Gender.Male);
+            mary = PersonStore.AddPerson("Mary", Gender.Female);
+            bob = PersonStore.AddPerson("Bob", Gender.Male);
+            sally = PersonStore.AddPerson("Sally", Gender.Female);
+            dave = PersonStore.AddPerson("Dave", Gender.Male);
+            davesMaternalUncle = PersonStore.AddPerson("Hulk", Gender.Male);
+            davesPaternalAunt = PersonStore.AddPerson("Aunt", Gender.Female);
+            davesMaternalGrandDad = PersonStore.AddPerson("Thor", Gender.Male);
+            davesMaternalGrandMom = PersonStore.AddPerson("Wonder", Gender.Female);
+            davesPaternalGrandDad = PersonStore.AddPerson("Thor1", Gender.Male);
+            davesPaternalGrandMom = PersonStore.AddPerson("Wonder1", Gender.Female);
 
-            ServiceLocator.RegisterType(PersonStore);
+            amy = PersonStore.AddPerson("Amy", Gender.Female);
+            bamy = PersonStore.AddPerson("Bamy", Gender.Female);
+            miller = PersonStore.AddPerson("Miller", Gender.Male);
+            amysBrother = PersonStore.AddPerson("BigB", Gender.Male);
+            amysBrother1 = PersonStore.AddPerson("ABig", Gender.Male);
+            amysMom = PersonStore.AddPerson("Miley", Gender.Female);
+            amysDad = PersonStore.AddPerson("Brad", Gender.Male);
+
+            FamilyGraph familyGraph = new FamilyGraph(PersonStore);
 
             //Daves Family
-            familyGraph.Add(new EdgeInput("Thor", "Mary", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Wonder", "Mary", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Thor", "Hulk", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Wonder", "Hulk", RelationshipType.Parent));
+            familyGraph.AddRelationship("Thor", "Mary", "Parent");
+            familyGraph.AddRelationship("Wonder", "Mary", "Parent");
+            familyGraph.AddRelationship("Thor", "Hulk", "Parent");
+            familyGraph.AddRelationship("Wonder", "Hulk", "Parent");
 
-            familyGraph.Add(new EdgeInput("Thor1", "George", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Wonder1", "George", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Thor1", "Aunt", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Wonder1", "Aunt", RelationshipType.Parent));
+            familyGraph.AddRelationship("Thor1", "George", "Parent");
+            familyGraph.AddRelationship("Wonder1", "George", "Parent");
+            familyGraph.AddRelationship("Thor1", "Aunt", "Parent");
+            familyGraph.AddRelationship("Wonder1", "Aunt", "Parent");
 
-            familyGraph.Add(new EdgeInput("George", "Bob", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Bob", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("George", "Dave", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Dave", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("George", "Sally", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Mary", "Sally", RelationshipType.Parent));
+            familyGraph.AddRelationship("George", "Bob", "Parent");
+            familyGraph.AddRelationship("Mary", "Bob", "Parent");
+            familyGraph.AddRelationship("George", "Dave", "Parent");
+            familyGraph.AddRelationship("Mary", "Dave", "Parent");
+            familyGraph.AddRelationship("George", "Sally", "Parent");
+            familyGraph.AddRelationship("Mary", "Sally", "Parent");
 
 
             //Spouse
-            familyGraph.Add(new EdgeInput("Dave", "Amy", RelationshipType.Spouse));
-            
+            familyGraph.AddRelationship("Dave", "Amy", "Spouse");
+
             //Amy's Family
-            familyGraph.Add(new EdgeInput("Brad", "Miller", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Miley", "Miller", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Brad", "Amy", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Miley", "Amy", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Brad", "Bamy", RelationshipType.Parent));
-            familyGraph.Add(new EdgeInput("Miley", "Bamy", RelationshipType.Parent));
+            familyGraph.AddRelationship("Brad", "Miller", "Parent");
+            familyGraph.AddRelationship("Miley", "Miller", "Parent");
+            familyGraph.AddRelationship("Brad", "ABig", "Parent");
+            familyGraph.AddRelationship("Miley", "ABig", "Parent");
+            familyGraph.AddRelationship("Brad", "BigB", "Parent");
+            familyGraph.AddRelationship("Miley", "BigB", "Parent");
+            familyGraph.AddRelationship("Brad", "Amy", "Parent");
+            familyGraph.AddRelationship("Miley", "Amy", "Parent");
+            familyGraph.AddRelationship("Brad", "Bamy", "Parent");
+            familyGraph.AddRelationship("Miley", "Bamy", "Parent");
 
-            
-            ServiceLocator.RegisterType(familyGraph);
-
-            relationships = new Relationships();
+            relationships = new Relationships(familyGraph);
         }
 
         [Test]
@@ -89,28 +89,28 @@ namespace Family.Tests
         {
             var davesUncle = relationships.MaternalUncle("Dave");
             var expected = new List<Person>() { davesMaternalUncle };
-            davesUncle.Should().BeEquivalentTo(expected);
+            davesUncle.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
         [Test]
         public void MaternalUncleTest1()
         {
             var amysUncle = relationships.MaternalUncle("Amy");
-            var expected = new List<Person>() {  };
-            amysUncle.Should().BeEquivalentTo(expected);
+            var expected = new List<Person>() { };
+            amysUncle.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
         [Test]
         public void PaternalAuntTest()
         {
             var davesAunt = relationships.PaternalAunt("Dave");
             var expected = new List<Person>() { davesPaternalAunt };
-            davesAunt.Should().BeEquivalentTo(expected);
+            davesAunt.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
         [Test]
         public void MaternalAuntTest1()
         {
             var amysUncle = relationships.MaternalAunt("Amy");
             var expected = new List<Person>() { };
-            amysUncle.Should().BeEquivalentTo(expected);
+            amysUncle.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
 
         [Test]
@@ -118,42 +118,42 @@ namespace Family.Tests
         {
             var AmysInLaws = relationships.BrotherInLaw("Amy");
             var expected = new List<Person>() { bob };
-            AmysInLaws.Should().BeEquivalentTo(expected);
+            AmysInLaws.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
         [Test]
         public void SisterInLawTest()
         {
             var AmysInLaws = relationships.SisterInLaw("Amy");
             var expected = new List<Person>() { sally };
-            AmysInLaws.Should().BeEquivalentTo(expected);
+            AmysInLaws.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
         [Test]
         public void BrotherInLawTest1()
         {
-            var AmysInLaws = relationships.BrotherInLaw("Bob");
-            var expected = new List<Person>() { };
-            AmysInLaws.Should().BeEquivalentTo(expected);
+            var DavesInLaws = relationships.BrotherInLaw("Dave");
+            var expected = new List<Person>() { miller, amysBrother, amysBrother1 };
+            DavesInLaws.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
         [Test]
         public void SisterInLawTest1()
         {
             var AmysInLaws = relationships.SisterInLaw("Bob");
-            var expected = new List<Person>() {  };
-            AmysInLaws.Should().BeEquivalentTo(expected);
+            var expected = new List<Person>() { amy };
+            AmysInLaws.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
         [Test]
         public void SonTest1()
         {
             var GeorgeSons = relationships.Son("George");
             var expected = new List<Person>() { bob, dave };
-            GeorgeSons.Should().BeEquivalentTo(expected);
+            GeorgeSons.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
         [Test]
         public void DaughterTest1()
         {
             var GeorgeSons = relationships.Daughter("George");
             var expected = new List<Person>() { sally };
-            GeorgeSons.Should().BeEquivalentTo(expected);
+            GeorgeSons.Should().BeEquivalentTo(expected, m => m.WithStrictOrdering());
         }
     }
 }

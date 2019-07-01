@@ -5,9 +5,9 @@ using System.Text;
 
 namespace Family.DTO
 {
-    public class Edge
+    internal sealed class Relationship
     {
-        public Edge(Person source, Person target, RelationshipType relationshipType)
+        public Relationship(Person source, Person target, RelationshipType relationshipType)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Target = target ?? throw new ArgumentNullException(nameof(target));
