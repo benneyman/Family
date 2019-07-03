@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
-  </PropertyGroup>
-  <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <RuntimeFrameworkVersion>2.1.1</RuntimeFrameworkVersion>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
