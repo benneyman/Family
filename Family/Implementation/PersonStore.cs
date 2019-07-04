@@ -61,8 +61,7 @@ namespace Family.Implementation
         
         public Person GetPeople(string personName)
         {
-            Person person;
-            bool result = peopleStore.TryGetValue(personName, out person);
+            bool result = peopleStore.TryGetValue(personName, out Person person);
             if(!result)
             {
                 throw new ArgumentException($"{personName} isn't found");

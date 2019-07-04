@@ -5,19 +5,20 @@ using Family.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Family.Implementation
 {
     public sealed class FamilyGraph : IFamilyGraph, IBaseRelationships
     {
         private Dictionary<Person, PersonRelationships> Families;
+        public IPersonStore PersonStore { get; private set; }
+
         public FamilyGraph(IPersonStore personStore)
         {
             Families = new Dictionary<Person, PersonRelationships>();
             PersonStore = personStore;
         }
-        public IPersonStore PersonStore { get; private set; }
+        
         /// <summary>
         /// Adds a relation from source person to target person of the specified type relationshipType
         /// </summary>
@@ -68,18 +69,26 @@ namespace Family.Implementation
                 AddRelationship(motherRelationship.Spouse.Name, childName, "Parent");
             }
         }
+        
+        #region Private Methods
         private void AddSpouseRelationship(Relationship edge)
         {
-            PersonRelationships sourcePersonRelationships, tarGetPeopleRelationships;
-            Families.TryAdd(edge.Source, new PersonRelationships());
-            Families.TryAdd(edge.Target, new PersonRelationships());
+            PersonRelationships sourcePersonRelationships, targetPeopleRelationships;
 
-            Families.TryGetValue(edge.Source, out sourcePersonRelationships);
-            Families.TryGetValue(edge.Target, out tarGetPeopleRelationships);
-
-            if (tarGetPeopleRelationships.Spouse == null && sourcePersonRelationships.Spouse == null)
+            if(!Families.TryGetValue(edge.Source, out sourcePersonRelationships))
             {
-                tarGetPeopleRelationships.AddSpouse(edge.Source);
+                sourcePersonRelationships = new PersonRelationships();
+                Families.Add(edge.Source, sourcePersonRelationships);
+            }
+            if(!Families.TryGetValue(edge.Target, out targetPeopleRelationships))
+            {
+                targetPeopleRelationships = new PersonRelationships();
+                Families.Add(edge.Target, targetPeopleRelationships);
+            }
+
+            if (targetPeopleRelationships.Spouse == null && sourcePersonRelationships.Spouse == null)
+            {
+                targetPeopleRelationships.AddSpouse(edge.Source);
                 sourcePersonRelationships.AddSpouse(edge.Target);
             }
             else
@@ -89,15 +98,22 @@ namespace Family.Implementation
         }
         private void AddParentRelationship(Relationship edge)
         {
-            PersonRelationships sourcePersonRelationships, tarGetPeopleRelationships;
-            Families.TryAdd(edge.Source, new PersonRelationships());
-            Families.TryAdd(edge.Target, new PersonRelationships());
+            PersonRelationships sourcePersonRelationships, targetPeopleRelationships;
 
-            Families.TryGetValue(edge.Source, out sourcePersonRelationships);
-            Families.TryGetValue(edge.Target, out tarGetPeopleRelationships);
-            if (tarGetPeopleRelationships.CanAddParent(edge.Source))
+            if (!Families.TryGetValue(edge.Source, out sourcePersonRelationships))
             {
-                tarGetPeopleRelationships.AddParent(edge.Source);
+                sourcePersonRelationships = new PersonRelationships();
+                Families.Add(edge.Source, sourcePersonRelationships);
+            }
+            if (!Families.TryGetValue(edge.Target, out targetPeopleRelationships))
+            {
+                targetPeopleRelationships = new PersonRelationships();
+                Families.Add(edge.Target, targetPeopleRelationships);
+            }
+
+            if (targetPeopleRelationships.CanAddParent(edge.Source))
+            {
+                targetPeopleRelationships.AddParent(edge.Source);
                 sourcePersonRelationships.AddEdge(edge);
             }
             else
@@ -125,7 +141,8 @@ namespace Family.Implementation
             }
             return new Relationship(sourcePerson, targetPerson, relationship);
         }
-        
+        #endregion
+
         #region Base Relationships
         public IEnumerable<Person> Parents(IEnumerable<Person> people, Gender? gender = null)
         {
